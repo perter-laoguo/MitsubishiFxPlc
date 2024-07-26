@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -67,17 +66,34 @@ namespace MitsubishiFxPlc
             Addr2AreaAddr(address, out AreaType _, out ushort addr);
             return Convert.ToBoolean(v >> (addr % 8) & 1);
         }
+        /// <summary>
+        /// 异步读取位
+        /// </summary>
+        /// <param name="address">读取的数据地址</param>
+        /// <returns>bool值</returns>
+        public Task<bool> ReadBoolAsync(string address)
+        {
+            return Task.Run(() => ReadBool(address));
+        }
 
         /// <summary>
         /// 读取字节
         /// </summary>
-        /// <param name="addr">读取的数据地址</param>
+        /// <param name="address">读取的数据地址</param>
         /// <returns></returns>
         public byte ReadByte(string address)
         {
-            byte[] values = readPort(address, 1);
-
+            byte[] values = ReadPort(address, 1);
             return values[0];
+        }
+        /// <summary>
+        /// 异步读取字节
+        /// </summary>
+        /// <param name="address">读取的数据地址</param>
+        /// <returns></returns>
+        public Task<byte> ReadByteAsync(string address)
+        {
+            return Task.Run(() => ReadByte(address));
         }
 
         /// <summary>
@@ -87,9 +103,18 @@ namespace MitsubishiFxPlc
         /// <returns></returns>
         public ushort ReadUshort(string address)
         {
-            byte[] values = readPort(address, 2);
+            byte[] values = ReadPort(address, 2);
 
             return BitConverter.ToUInt16(values, 0);
+        }
+        /// <summary>
+        /// 异步读取ushort类型
+        /// </summary>
+        /// <param name="address">读取的数据地址</param>
+        /// <returns></returns>
+        public Task<ushort> ReadUshortAsync(string address)
+        {
+            return Task.Run(() => ReadUshort(address));
         }
         /// <summary>
         /// 读取uint类型
@@ -98,9 +123,18 @@ namespace MitsubishiFxPlc
         /// <returns></returns>
         public uint ReadUint(string address)
         {
-            byte[] values = readPort(address, 4);
+            byte[] values = ReadPort(address, 4);
 
             return BitConverter.ToUInt32(values, 0);
+        }
+        /// <summary>
+        /// 异步读取uint类型
+        /// </summary>
+        /// <param name="address">读取的数据地址</param>
+        /// <returns></returns>
+        public Task<uint> ReadUintAsync(string address)
+        {
+            return Task.Run(() => ReadUint(address));
         }
         /// <summary>
         /// 读取float
@@ -109,12 +143,21 @@ namespace MitsubishiFxPlc
         /// <returns></returns>
         public float ReadSingle(string address)
         {
-            byte[] values = readPort(address, 4);
+            byte[] values = ReadPort(address, 4);
 
             return BitConverter.ToSingle(values, 0);
         }
+        /// <summary>
+        /// 异步读取uint类型
+        /// </summary>
+        /// <param name="address">读取的数据地址</param>
+        /// <returns></returns>
+        public Task<float> ReadSingleAsync(string address)
+        {
+            return Task.Run(() => ReadSingle(address));
+        }
         #region 写入bool
-        public bool Write(string address, bool value)
+        public void Write(string address, bool value)
         {
             // 获取区和地址
             Addr2AreaAddr(address, out AreaType area, out ushort addr);
@@ -123,8 +166,7 @@ namespace MitsubishiFxPlc
 
             byte[] buffer = addrByte.Prepend(value ? (byte)0x37 : (byte)0x38).ToArray();
             getReqBuffer(ref buffer);
-            byte[] res = writeAndRead(buffer, 1);
-            return res[0] == 6;
+            WriteAndRead(buffer, 1);
         }
         #endregion
         #region 写入数字
@@ -134,9 +176,9 @@ namespace MitsubishiFxPlc
         /// <param name="address">地址位</param>
         /// <param name="value">写入数据</param>
         /// <returns>是否写入成功</returns>
-        public bool Write(string address, byte value)
+        public void Write(string address, byte value)
         {
-            return writeBytes(address, Common.NumToAsciiBytes(value, 1 * 2));
+            WriteBytes(address, Common.NumToAsciiBytes(value, 1 * 2));
         }
         /// <summary>
         /// 向指定的地址写入ushort
@@ -144,9 +186,9 @@ namespace MitsubishiFxPlc
         /// <param name="address">地址位</param>
         /// <param name="value">写入数据</param>
         /// <returns>是否写入成功</returns>
-        public bool Write(string address, ushort value)
+        public void Write(string address, ushort value)
         {
-            return writeBytes(address, Common.NumToAsciiBytes(value, 2 * 2));
+            WriteBytes(address, Common.NumToAsciiBytes(value, 2 * 2));
         }
         /// <summary>
         /// 向指定的地址写入uint
@@ -154,9 +196,9 @@ namespace MitsubishiFxPlc
         /// <param name="address">地址位</param>
         /// <param name="value">写入数据</param>
         /// <returns>是否写入成功</returns>
-        public bool Write(string address, uint value)
+        public void Write(string address, uint value)
         {
-            return writeBytes(address, Common.NumToAsciiBytes(value, 4 * 2));
+            WriteBytes(address, Common.NumToAsciiBytes(value, 4 * 2));
         }
         /// <summary>
         /// 向指定的地址写入float
@@ -164,11 +206,11 @@ namespace MitsubishiFxPlc
         /// <param name="address">地址位</param>
         /// <param name="value">写入数据</param>
         /// <returns>是否写入成功</returns>
-        public bool Write(string address, float value)
+        public void Write(string address, float value)
         {
-            return writeBytes(address, Common.NumToAsciiBytes(value));
+            WriteBytes(address, Common.NumToAsciiBytes(value));
         }
-        private bool writeBytes(string address, byte[] values)
+        private void WriteBytes(string address, byte[] values)
         {
             // 获取区和地址
             Addr2AreaAddr(address, out AreaType area, out ushort addr);
@@ -179,8 +221,7 @@ namespace MitsubishiFxPlc
 
             byte[] buffer = addrByte.Prepend<byte>(0x31).Concat(lenByte).Concat(values).ToArray();
             getReqBuffer(ref buffer);
-            byte[] res = writeAndRead(buffer, 1);
-            return res[0] == 6;
+            WriteAndRead(buffer, 1);
         }
         #endregion
 
@@ -192,13 +233,13 @@ namespace MitsubishiFxPlc
         /// <param name="address">plc地址，如：D0、M0</param>
         /// <param name="len">要读取的字节数</param>
         /// <returns>结果数组</returns>
-        private byte[] readPort(string address, byte len)
+        private byte[] ReadPort(string address, byte len)
         {
             // 获取询问帧
             byte[] buffer = getReadBuffer(address, len);
 
             // 写入串口并获取返回结果
-            byte[] res = writeAndRead(buffer, 4 + len * 2);
+            byte[] res = WriteAndRead(buffer, 4 + len * 2);
 
             // 将响应帧中的数据解析为字节
             byte[] values = res.Skip(1).Take(len * 2).ToArray().AsciiBytesToNumBytes();
@@ -212,7 +253,7 @@ namespace MitsubishiFxPlc
         /// <param name="bytes">要写入的数据</param>
         /// <param name="expectLen">预期返回的字节数</param>
         /// <returns>读取的结果</returns>
-        private byte[] writeAndRead(byte[] bytes, int expectLen)
+        private byte[] WriteAndRead(byte[] bytes, int expectLen)
         {
             lock (lockObj)
             {
