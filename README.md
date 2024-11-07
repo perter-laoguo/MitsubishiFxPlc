@@ -37,9 +37,5 @@ private void button1_Click(object sender, EventArgs e)
     Console.WriteLine("D10: " + plc.ReadUInt32("D10"));
     Console.WriteLine("D20: " + plc.ReadFloat("D20"));
     Console.WriteLine("X0: " + plc.ReadBool("X0"));
-    
-    // 均支持异步读取
-    bool b = await plc.ReadBoolAsync("M1");
-    await Console.Out.WriteLineAsync("M1: " + b.ToString ());
 }
 ```

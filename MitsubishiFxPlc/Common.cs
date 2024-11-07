@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace MitsubishiFxPlc
 {
@@ -24,11 +22,8 @@ namespace MitsubishiFxPlc
             {
                 sum += bytes[i];
             }
-            // 2、转换位16进制字符串
-            string sumStr = sum.ToString("X2");
-            // 3、将16进制字符串转换位ascii码数组
-            byte[] res = Encoding.ASCII.GetBytes(sumStr);
-            return res;
+            // 2、转换为16进制字符串并生成字节数组
+            return Encoding.ASCII.GetBytes(sum.ToString("X2"));
         }
         /// <summary>
         /// 为字节数组添加和校验
@@ -40,8 +35,6 @@ namespace MitsubishiFxPlc
         {
             byte[] sum = CalcCheckSum(bytes, start, len);   // 计算校验和
             bytes = bytes.Concat(sum).ToArray();// 拼接数组
-
-            Console.WriteLine("发送：" + BitConverter.ToString(bytes, 0).Replace("-", " "));
         }
         /// <summary>
         /// 将ascii数组两两组合，转换为byte数组
@@ -57,15 +50,10 @@ namespace MitsubishiFxPlc
             // 长度必须是偶数
             if (len % 2 != 0) throw new ArgumentException("解析长度必须是偶数");
 
-            // 1、将每一个数字转换为ascii字符串 
-            string s = Encoding.ASCII.GetString(bytes, startIndex, len);
-
-            // 2、字符串两两分割, 存储到数组中         
-            // 3、每一个字符串变成数字           
             byte[] resBytes = new byte[len / 2];
             for (int i = 0; i < resBytes.Length; i++)
             {
-                resBytes[i] = Convert.ToByte(s.Substring(i * 2, 2), 16);
+                resBytes[i] = Convert.ToByte(Encoding.ASCII.GetString(bytes, startIndex + i * 2, 2), 16);
             }
             return resBytes;
         }
@@ -78,23 +66,22 @@ namespace MitsubishiFxPlc
         public static byte[] Num2AsciiArr(object v, bool isLittle = true)
         {
             int len = GetNumSize(v);
-            byte[] bytes = new byte[16]; // 存储转换后的字节数组
-            MemoryStream stream = new MemoryStream(bytes);   // 为数组创建流
-            BinaryWriter w = new BinaryWriter(stream);   // 为流创建“按位写入”对象
-            if (v is float) w.Write(Convert.ToSingle(v));
-            else if (v is double) w.Write(Convert.ToDouble(v));
-            else w.Write(Convert.ToDecimal(v));     // 将变量写入流
-            bytes = bytes.Take(len).ToArray();      // 截取部分
-
-
-            if (isLittle == false)   // 如果不是小端模式，则反转数组变成大端
+            byte[] bytes = new byte[16];
+            using (MemoryStream stream = new MemoryStream())
             {
-                bytes = bytes.Reverse().ToArray();
+                using (BinaryWriter w = new BinaryWriter(stream))
+                {
+                    if (v is float) w.Write(Convert.ToSingle(v));
+                    else if (v is double) w.Write(Convert.ToDouble(v));
+                    else w.Write(Convert.ToDecimal(v));
+                }
+                bytes = stream.GetBuffer().Take(len).ToArray();
             }
-            string s = BitConverter.ToString(bytes, 0, bytes.Length);      // 字节数组转换为16进制的字符串表达方式
-            s = s.Replace("-", "");     // 替换字符串中的 - 为空字符串
-            byte[] sbytes = Encoding.ASCII.GetBytes(s); // 转换为ascii数组
-            return sbytes;
+
+            if (!isLittle) Array.Reverse(bytes);
+
+            string hexString = BitConverter.ToString(bytes).Replace("-", "");
+            return Encoding.ASCII.GetBytes(hexString);
         }
 
         public static byte GetNumSize(object v)

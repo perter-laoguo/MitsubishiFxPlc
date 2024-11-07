@@ -15,11 +15,11 @@ namespace PlcTest
             InitializeComponent();
             plc = new FxPlc();
             // 串口信息的初始化
-            plc.SerialiInit("COM2", 9600, 7, StopBits.One, Parity.Even);
+            plc.SerialInit("COM2", 9600, 7, StopBits.One, Parity.Even);
             plc.Open();
         }
 
-        private async void button1_ClickAsync(object sender, EventArgs e)
+        private void button1_ClickAsync(object sender, EventArgs e)
         {
             plc.Write("D2", (ushort)258);
             plc.Write("D10", (uint)65536);
@@ -34,9 +34,6 @@ namespace PlcTest
             Console.WriteLine("D10: " + plc.ReadUInt32("D10"));
             Console.WriteLine("D20: " + plc.ReadFloat("D20"));
             Console.WriteLine("X0: " + plc.ReadBool("X0"));
-
-            bool b = await plc.ReadBoolAsync("M1");
-            await Console.Out.WriteLineAsync("M1: " + b.ToString ());
         }
     }
 }
