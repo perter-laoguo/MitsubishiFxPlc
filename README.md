@@ -1,12 +1,12 @@
 # MitsubishiFxPlc
 
-ÓÃÓÚºÍÈıÁâµÄFXÏµÁĞPLCÍ¨ĞÅ£¬ÏÖÖ§³ÖD¡¢M¡¢S¡¢Y¡¢XÇøµÄ¶ÁĞ´²Ù×÷£¬ÏÖ½ö²âÊÔÈıÁâFX3UÉè±¸£¬Õâ¼¸¸öÇø¾ù¶ÁĞ´Õı³££¬ÓĞÎÊÌâ¿ÉÌá½»isuues£¬ÓĞ¿ÕÁË¸Ä£¬ÎûÎû¡£
+ç”¨äºå’Œä¸‰è±çš„FXç³»åˆ—çš„PLCé€šä¿¡ï¼Œä½¿ç”¨RS232ç¼–ç¨‹å£ç§æœ‰åè®®ï¼Œç°æ”¯æŒDã€Mã€Sã€Yã€XåŒºçš„è¯»å†™æ“ä½œï¼Œç°ä»…æµ‹è¯•ä¸‰è±FX3Uè®¾å¤‡ï¼Œè¿™å‡ ä¸ªåŒºå‡è¯»å†™æ­£å¸¸ï¼Œæœ‰é—®é¢˜å¯æäº¤isuuesï¼Œæœ‰ç©ºäº†æ”¹ï¼Œå˜»å˜»ã€‚
 
-## Ê¹ÓÃ
+## ä½¿ç”¨
 
-clone±¾²Ö¿â£¬±àÒëºóÔÚÄãµÄÏîÄ¿ÖĞÌí¼Ó¶Ô`MitsubishiFxPlc`ÏîÄ¿dllµÄÒıÓÃ
+cloneæœ¬ä»“åº“ï¼Œç¼–è¯‘ååœ¨ä½ çš„é¡¹ç›®ä¸­æ·»åŠ å¯¹`MitsubishiFxPlc`é¡¹ç›®dllçš„å¼•ç”¨
 
-¶ÁĞ´ÑİÊ¾
+è¯»å†™æ¼”ç¤º
 
 ```CSharp
 private MelsecFxPlc plc;
@@ -14,15 +14,15 @@ private MelsecFxPlc plc;
 public Form1()
 {
     InitializeComponent();
-    // ÊµÀı»¯
+    // å®ä¾‹åŒ–
     plc = new MelsecFxPlc();
-    // ´®¿ÚĞÅÏ¢µÄ³õÊ¼»¯
+    // ä¸²å£ä¿¡æ¯çš„åˆå§‹åŒ–
     plc.SerialiInit("COM2", 9600, 7, StopBits.One, Parity.Even);
 }
 
 private void button1_Click(object sender, EventArgs e)
 {
-    // Ğ´Èë²âÊÔ
+    // å†™å…¥æµ‹è¯•
     plc.Write("D2", (ushort)258);
     plc.Write("D10", (uint)65536);
     plc.Write("D20", (float)3.45);
@@ -30,7 +30,7 @@ private void button1_Click(object sender, EventArgs e)
     plc.Write("S0", true);
     plc.Write("Y0", true);
     
-    // ¶ÁÈ¡²âÊÔ
+    // è¯»å–æµ‹è¯•
     byte[] a = plc.Read("D0", 2);
     Console.WriteLine("D0: " + BitConverter.ToUInt16(a, 0));
     Console.WriteLine("D2: " + plc.ReadUInt16("D2"));
@@ -38,7 +38,7 @@ private void button1_Click(object sender, EventArgs e)
     Console.WriteLine("D20: " + plc.ReadFloat("D20"));
     Console.WriteLine("X0: " + plc.ReadBool("X0"));
     
-    // ¾ùÖ§³ÖÒì²½¶ÁÈ¡
+    // å‡æ”¯æŒå¼‚æ­¥è¯»å–
     bool b = await plc.ReadBoolAsync("M1");
     await Console.Out.WriteLineAsync("M1: " + b.ToString ());
 }
